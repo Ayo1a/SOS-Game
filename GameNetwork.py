@@ -6,14 +6,14 @@ class GameNetwork(nn.Module):
         super(GameNetwork, self).__init__()
         self.fc1 = nn.Linear(input_size, 128)
         self.fc2 = nn.Linear(128, 128)
-        self.policy_head = nn.Linear(128, action_size)
-        self.value_head = nn.Linear(128, 1)
+        self.policy_head = nn.Linear(128, action_size) #convert results to probabilities vector 
+        self.value_head = nn.Linear(128, 1) #valuation for curent stat 
 
     def forward(self, x):
         x = torch.relu(self.fc1(x))
         x = torch.relu(self.fc2(x))
-        policy = torch.softmax(self.policy_head(x), dim=-1)
-        value = torch.tanh(self.value_head(x))
+        policy = torch.softmax(self.policy_head(x), dim=-1) 
+        value = torch.tanh(self.value_head(x)) #evaluation between -1 to 1 
         return policy, value
 
     def save_weights(self, path):

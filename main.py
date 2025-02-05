@@ -8,7 +8,7 @@ from torch.utils.data import DataLoader
 def train_network(network, data, epochs=10, batch_size=64, lr=0.001):
     optimizer = optim.Adam(network.parameters(), lr=lr)
     criterion_policy = nn.CrossEntropyLoss()
-    criterion_value = nn.MSELoss()
+    criterion_value = nn.MSELoss() #Suitable for predicting continuous numbers, such as the quality of a situation in a game
     loader = DataLoader(GameDataset(data), batch_size=batch_size, shuffle=True)
 
     for epoch in range(epochs):
