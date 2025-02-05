@@ -63,3 +63,27 @@ class SOSGame:
 
     def check_game_over(self):
         return all(self.board[x][y] != ' ' for x in range(8) for y in range(8))
+
+#TODO:
+''' unmake_move(x, y) does not restore the score '''
+# What is the problem?
+# In the current version, the function unmake_move(x, y) only deletes the letter from the board, but does not restore the score to its original state.
+# If we make a move where we created an "SOS" and received points, undoing the move will leave the score as if the move still existed!
+
+# Suggested improvement
+# We will add a data structure that will store the changes in the score, so that we can restore them when undoing a move.
+# We will add a stack for each player to track the changes in the score.
+
+''' check_game_over() could be smarter '''
+# What's the problem?
+# Currently check_game_over() only ends the game when the entire board is full, but the game may be lost for both players before then.
+
+# Suggested improvement
+# We will check if there are any moves left that could create an "SOS", not just if the board is full.
+
+''' check_sos(x, y) could be more efficient '''
+# What's the problem?
+# Currently the function check_sos(x, y) rescans all directions on each move, even if certain options are known to be irrelevant.
+# This could be improved by pre-marking squares that could create an "SOS", and only scanning the area around the last move.
+# Suggested improvement
+# Instead of checking the entire board each time, we will only check the area closest to the last move.

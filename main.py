@@ -29,18 +29,24 @@ def train_network(network, data, epochs=10, batch_size=64, lr=0.001):
 
 # Pre-training
 def generate_self_play_data(player, games=10000):
+    '''What does the function do?
+The function creates data for pre-training through Self-Play, meaning it lets the player play against himself and learns from the games that are created.
+The result is a dataset containing information from all the games, including:
+-game states
+-Visit metrics (visit_counts) - representing which moves were considered more.
+-Final result (outcome) - did the player win or lose.'''
     data = []
     for _ in range(games):
         game = SOSGame()
         states, visit_counts, outcomes = [], [], []
         while not game.game_over:
-            state = game.encode()
-            action = player.play(game)
+            state = game.encode() #convert state to vector
+            action = player.play(game) #return action that AI choose
             visit_count = [node.visit_count for node in player.root.children.values()]
             states.append(state)
             visit_counts.append(visit_count)
             game.make_move(*action)
-        outcome = 1 if game.scores[SOSGame.PLAYER_1] > game.scores[SOSGame.PLAYER_2] else -1
+        outcome = 1 if game.scores[SOSGame.PLAYER_1] > game.scores[SOSGame.PLAYER_2] else -1 #TODO varify this part with Zur 
         for s, vc in zip(states, visit_counts):
             data.append((s, vc, outcome))
     return data
