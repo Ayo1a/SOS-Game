@@ -1,4 +1,6 @@
 class PUCTNode:
+    
+    #each node saves copy of the game state 
     def __init__(self, game, prior=1.0):
         self.game = game.clone()
         self.prior = prior
@@ -24,3 +26,9 @@ class PUCTNode:
     def update(self, value):
         self.visit_count += 1
         self.total_value += value
+        
+        #TODO- asking Zur
+        # 1. Use normalization for values: currently total_value is aggregated, 
+        # it may be more useful to normalize it (self.total_value / self.visit_count) to avoid biases.
+        # 2. Adding the Temperature mechanism: In Alpha-Zero, "Temperature" is used to control 
+        # the level of exploration in different stages of the game.
