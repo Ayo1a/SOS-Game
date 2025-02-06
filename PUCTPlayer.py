@@ -36,7 +36,7 @@ class PUCTPlayer:
         child.update(value)
         return -value
     
-    Disadvantages and possible improvements:
+    # Disadvantages and possible improvements:
 
 #TODO- asking Zur
 # Evaluate improvement:

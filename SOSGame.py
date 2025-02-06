@@ -31,11 +31,15 @@ class SOSGame:
         return clone
 
     def encode(self):
-        flat_board = [1 if cell == 'S' else 2 if cell == 'O' else 0 for row in self.board for cell in row]
-        return flat_board + [self.current_player, self.scores[SOSGame.PLAYER_1], self.scores[SOSGame.PLAYER_2]]
+        #TODO: changing 
+        flat_board_s = [1 if cell == 'S' else 0 for row in self.board for cell in row]
+        flat_board_o = [1 if cell == 'O' else 0 for row in self.board for cell in row]
+        # flat_board = [1 if cell == 'S' else 2 if cell == 'O' else 0 for row in self.board for cell in row]
+        return flat_board_s + flat_board_o + [self.current_player, self.scores[SOSGame.PLAYER_1], self.scores[SOSGame.PLAYER_2]]
 
     @staticmethod
     def decode(action_index):
+        #TODO: changing 
         x = action_index // 16
         y = (action_index % 16) // 2
         letter = 'S' if action_index % 2 == 0 else 'O'
@@ -64,6 +68,7 @@ class SOSGame:
     def check_game_over(self):
         return all(self.board[x][y] != ' ' for x in range(8) for y in range(8))
 
+''' checked -  we don't really need it '''
 #TODO:
 ''' unmake_move(x, y) does not restore the score '''
 # What is the problem?
