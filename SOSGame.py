@@ -1,3 +1,4 @@
+import random
 import numpy as np
 
 class SOSGame:
@@ -36,6 +37,15 @@ class SOSGame:
         self.scores[previous_player] -= points_scored
         self.current_player = previous_player
         self.game_over = False
+
+    def clone(self):
+        cloned_game = SOSGame()
+        cloned_game.board = self.board.copy()
+        cloned_game.current_player = self.current_player
+        cloned_game.scores = self.scores.copy()
+        cloned_game.game_over = self.game_over
+        cloned_game.move_history = self.move_history.copy()
+        return cloned_game
 
     def encode(self):
         """Encodes the game state as a one-hot tensor and extra information."""
@@ -83,12 +93,57 @@ class SOSGame:
 
             # Case 2: The new letter is 'S' at the end of (S O S)
             if self.is_valid(x - 2 * dx, y - 2 * dy) and self.is_valid(x - dx, y - dy):
-                if self.board[x - 2 * dx, y - 2 * dy] == 'S' and self.board[x - dx, y - dy] == 'O' and self.board[x, y] == 'S':
+                if self.board[x - 2 * dx, y - 2 * dy] == 'S' and self.board[x - dx, y - dy] == 'O' and self.board[
+                    x, y] == 'S':
+                    points += 1
+
+            # Case 3: The new letter 'S' is placed at the beginning of (S O S)
+            if self.is_valid(x + 2 * dx, y + 2 * dy) and self.board[x, y] == 'S' and self.board[x + dx, y + dy] == 'O':
+                if self.board[x + 2 * dx, y + 2 * dy] == 'S':
                     points += 1
 
         return points
 
+    def display_board(self):
+        print("  " + " ".join(map(str, range(8))))
+        for i, row in enumerate(self.board):
+            print(i, " ".join(row))
+
     @staticmethod
-    def is_valid(x, y):
+    def is_valid(x: int, y: int) -> bool:
         """Checks if the given coordinates are within the board's boundaries."""
         return 0 <= x < 8 and 0 <= y < 8
+
+    def computer_move(self):
+        move = random.choice(self.legal_moves())
+        self.make_move(*move)
+
+# Game Loop
+
+def play_game():
+    game = SOSGame()
+    while not game.game_over:
+        game.display_board()
+        if game.current_player == SOSGame.PLAYER_1:
+            print(f"Player {game.current_player}'s turn")
+            try:
+                x, y, letter = input("Enter move (row col letter): ").split()
+                x, y = int(x), int(y)
+                if letter not in ('S', 'O', 's', 'o'):
+                    raise ValueError("Letter must be 'S' or 'O'")
+                game.make_move(x, y, letter.upper())
+                print(f"current scores: Player 1: {game.scores[SOSGame.PLAYER_1]}, Player 2 : {game.scores[SOSGame.PLAYER_2]}")
+            except Exception as e:
+                print(f"Invalid move: {e}. Try again.")
+        else:
+            print("Computer's turn...")
+            game.computer_move()
+            print(f"current scores: Player 1: {game.scores[SOSGame.PLAYER_1]}, Player 2 : {game.scores[SOSGame.PLAYER_2]}")
+
+    game.display_board()
+    print(game.status())
+
+if __name__ == "__main__":
+    play_game()
+
+
