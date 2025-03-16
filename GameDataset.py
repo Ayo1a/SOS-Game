@@ -1,7 +1,7 @@
 # Dataset for pre-training
 '''the goal is to load training data
 each example contains game state, policy and value
-the calss will work with Dataloader in Pytorch to suply data to the model'''
+the class will work with Dataloader in Pytorch to supply data to the model'''
 import torch
 from torch.utils.data import Dataset
 
