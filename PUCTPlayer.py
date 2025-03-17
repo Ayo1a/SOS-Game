@@ -13,7 +13,8 @@ class PUCTPlayer:
     def play(self, game):
         """ביצוע מהלך בעזרת PUCT ו-MCTS."""
         root = self.get_or_create_node(game)
-        for _ in range(self.simulations):
+        for i in range(self.simulations):
+            print(f"Running simulation {i + 1} of {self.simulations}")
             self.simulate(root)
 
         # בחירת המהלך הטוב ביותר
@@ -50,15 +51,25 @@ class PUCTPlayer:
             policy, value = self.evaluate_random(node.game)
             node.expand(policy)  # הרחבת הצומת
 
-            # בחירת מהלך רנדומלי מתוך המהלכים הכי טובים
-            best_move = random.choice([move for move, val in policy.items() if val == max(policy.values())])
-            child = node.children[best_move]  # מקשרים את הצומת לילד החדש
+            # בדיקה אם הפוליסי ריק
+            if not policy or all(val is None for val in policy.values()):
+                return self.evaluate_game(node.game)  # אין מהלכים חוקיים
+
+            # מציאת המהלכים הטובים ביותר
+            max_value = max(policy.values())
+            best_moves = [move for move, val in policy.items() if val == max_value]
+
+            best_move = random.choice(best_moves)
+            child = node.children[best_move]  # קישור הצומת לילד החדש
         else:
             best_move, child = node.select(self.c_puct)  # בחירה בעזרת PUCT
 
         # **ביצוע המהלך**
         row, col, letter = best_move
         node.game.make_move(row, col, letter)
+
+        # עדכון הנתונים של הילד
+        child.game = node.game.clone()
 
         # **הרצת סימולציה על הילד**
         value = self.simulate(child)

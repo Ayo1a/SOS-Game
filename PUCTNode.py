@@ -29,7 +29,7 @@ class PUCTNode:
 
             # חישוב UCB
             ucb = q_value + exploration_term
-            print(f"select Action: {action}, Q: {q_value:.2f}, UCB: {ucb:.2f}, Visits: {child_node.visit_count}")
+            #print(f"select Action: {action}, Q: {q_value:.2f}, UCB: {ucb:.2f}, Visits: {child_node.visit_count}")
 
             if ucb > best_ucb:
                 best_ucb = ucb

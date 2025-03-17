@@ -1,6 +1,7 @@
 import random
 import numpy as np
 from constant import *
+import copy
 from PUCTPlayer import *
 
 class SOSGame:
@@ -38,20 +39,25 @@ class SOSGame:
         """Reverts the board to the previous state by undoing the last move."""
         if not self.move_history:
             return
+
+        # שחזור המידע מתוך היסטוריית המהלכים
         x, y, letter, previous_player, points_scored = self.move_history.pop()
-        self.board[x, y] = ' '
-        self.scores[previous_player] -= points_scored
+
+        # שחזור הלוח והניקוד
+        self.board[x, y] = ' '  # מחזירים את התו למצבו הריק
+        self.scores[previous_player] -= points_scored  # מורידים את הניקוד של השחקן שביצע את המהלך
+
+        # שחזור השחקן בתור
         self.current_player = previous_player
+
+        # בדוק אם המשחק הסתיים ושחזר אותו
         self.game_over = False
+
 
     def clone(self):
         """Creates a deep copy of the current game state."""
-        cloned_game = SOSGame()
-        cloned_game.board = self.board.copy()
-        cloned_game.current_player = self.current_player
-        cloned_game.scores = self.scores.copy()
-        cloned_game.game_over = self.game_over
-        cloned_game.move_history = self.move_history.copy()
+        cloned_game = self.__class__()  # Supports subclassing
+        cloned_game.__dict__ = copy.deepcopy(self.__dict__)  # Deep copy of all attributes
         return cloned_game
 
     def encode(self):
@@ -150,7 +156,7 @@ def play_game():
         [' ', ' ', ' ', 'O', 'O']
     ], dtype=str), current_player=PLAYER_2, scores={PLAYER_1: 2, PLAYER_2: 1})
 
-    puct_player = PUCTPlayer(c_puct=5.0, simulations=20)
+    puct_player = PUCTPlayer(c_puct=5.0, simulations=40)
 
     while not game.game_over:
         game.display_board()
