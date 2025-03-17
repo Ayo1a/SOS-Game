@@ -1,149 +1,78 @@
-from PUCTNode import PUCTNode
+import math
+import random
 import numpy as np
 from constant import *
 
+class PUCTNode:
+    def __init__(self, game, parent=None, action=None, prior=0):
+        self.game = game
+        self.parent = parent
+        self.action = action  # הפעולה שהובילה לצומת הזה
+        self.children = {}  # צמתים ילדים
+        self.visit_count = 0
+        self.value = 0
+        self.is_fully_expanded = False
+        self.untried_actions = game.legal_moves()  # מהלכים שעדיין לא נוסו
+        self.prior = prior  # הסתברות ראשונית של המהלך (P)
 
-class PUCTPlayer:
-    def __init__(self, c_puct=1.0, simulations=5):
-        self.c_puct = c_puct
-        self.simulations = simulations
-        self.visited_nodes = {}  # מילון לשמירת צמתים
+    def select(self, c_puct):
+        """בחר פעולה על פי Upper Confidence Bound for Trees (PUCT)."""
+        best_actions = []
+        best_ucb = -float('inf')
 
-    def play(self, game):
-        # יצירת שורש חדש ותחילת חיפושי MCTS
-        root = self.get_or_create_node(game)
-        for _ in range(self.simulations):
-            self.simulate(root)
-            root.print_tree()
+        for action, child_node in self.children.items():
+            # חישוב Q-value
+            q_value = child_node.value / (child_node.visit_count + 1e-4)
 
-        # בחירת המהלך הטוב ביותר
-        best_action = max(root.children.items(), key=lambda child: child[1].visit_count)[0]
-        return best_action
+            # חישוב רכיב ה-exploration
+            exploration_term = c_puct * math.sqrt(math.log(self.visit_count + 1) / (child_node.visit_count + 1e-4))
 
-    def get_board_state(self, game):
-        """החזרת ייצוג מצב הלוח ללא השחקן הנוכחי"""
-        return tuple(tuple(row) for row in game.board)  # ייצוג הלוח כמבנה נתונים (tuple של tuple)
+            # חישוב UCB
+            ucb = q_value + exploration_term
+            print(f"select Action: {action}, Q: {q_value:.2f}, UCB: {ucb:.2f}, Visits: {child_node.visit_count}")
 
-    def get_or_create_node(self, game):
-        """מחפש או יוצר צומת חדש"""
-        game_state = self.get_board_state(game)  # הוצאת מצב הלוח  # ייצוג מצב המשחק
-        if game_state in self.visited_nodes:
-            return self.visited_nodes[game_state]  # אם הצומת קיים, מחזירים את הצומת הקיים
-        else:
-            node = PUCTNode(game)
-            self.visited_nodes[game_state] = node
-            return node
+            if ucb > best_ucb:
+                best_ucb = ucb
+                best_actions = [(action, child_node)]
+            elif ucb == best_ucb:
+                best_actions.append((action, child_node))
 
-    def simulate(self, node):
-        """Performs a simulation using MCTS"""
+        return random.choice(best_actions)
 
-        if node.game.game_over:
-            return self.evaluate_game(node.game)  # אם המשחק נגמר, מחזירים הערכה
-
-        if not node.children:
-            policy, value = self.evaluate_random(node.game)
-            node.expand(policy)  # מרחיבים את הצומת עם מהלכים אפשריים
-
-            # בוחרים את המהלך הראשון בהתבסס על ההסתברות הגבוהה ביותר במדיניות
-            best_move = max(policy, key=policy.get) if policy else None
-            if best_move is None:
-                return value  # אם אין מהלך, מחזירים את הערך כפי שהוא
-
-            first_child = node.children[best_move]
-
-            # ביצוע המהלך במשחק
-            row, col, letter = best_move
-            node.game.make_move(row, col, letter)
-
-            # המשך סימולציה עם הצומת החדש
-            value = self.simulate(first_child)
-
-            # שחזור מצב המשחק
-            node.game.unmake_move()
-
-            return -value  # החזרת הערך ההפוך כדי להתאים למינימקס
-
-        # שלב הבחירה - בחירת מהלך על פי PUCT
-        action, child = node.select(self.c_puct)
-
-        # ביצוע המהלך שנבחר
-        row, col, letter = action
-        node.game.make_move(row, col, letter)
-
-        # סימולציה על הילד שנבחר
-        value = self.simulate(child)
-
-        # שחזור מצב המשחק
-        node.game.unmake_move()
-
-        # עדכון הערך בצומת
-        child.update(value)
-
-        return -value  # מחזירים את הערך ההפוך
-
-    def evaluate_random(self, game):
-        legal_moves = game.legal_moves()
-        if not legal_moves:
-            return {}, 0.0  # אין מהלכים חוקיים
-
-        move_scores = {}
-        current_player = game.current_player
-        opponent = PLAYER_1 if game.current_player == PLAYER_2 else PLAYER_2
-
-        for move in legal_moves:
-            x, y, letter = move
-
-            # 1️⃣ **תוספת נקודות לשחקן הנוכחי**
-            before = game.scores.copy()
-            game.make_move(x, y, letter)
-            after = game.scores.copy()
-            gain = after[current_player] - before[current_player]
-
-            # 2️⃣ **בדוק את כל המהלכים של היריב** לאחר המהלך שלי
-            opponent_sos_threat = 0
-            for opponent_move in game.legal_moves():
-                ox, oy, _ = opponent_move
-                game.make_move(ox, oy, 'S' if opponent == 1 else 'O')  # נניח שהיריב שם S או O
-                if game.check_sos(ox, oy)[0] > 0:  # אם אחרי המהלך של היריב נוצר SOS
-                    opponent_sos_threat = max(opponent_sos_threat,  game.check_sos(ox, oy)[0])
-                game.unmake_move()
-
-            # 3️⃣ **מניעת SOS מהיריב**
-            opponent_prevention = opponent_sos_threat  # כל סיכון להשלמת SOS של היריב שאנחנו יכולים למנוע
-
-            # ציון סופי - אנחנו נותנים יותר משקל לניקוד שלי, אבל גם למניעת SOS מהיריב
-            move_scores[move] = gain * 3 - opponent_prevention * 2  # משקלים - להגדיל נקודות ולמנוע SOS
-
-            game.unmake_move()  # מחזירים את המצב
-
-        # אם כל המהלכים מובילים לאותו ציון, השתמש בהסתברות אחידה
-        if all(score == 0 for score in move_scores.values()):
-            move_probs = {move: 1 / len(legal_moves) for move in legal_moves}
-        else:
-            exp_values = np.exp(list(move_scores.values()))
-            probabilities = exp_values / np.sum(exp_values)
-            move_probs = {move: prob for move, prob in zip(move_scores.keys(), probabilities)}
-
-        # הערך הכללי של המשחק לאחר החישוב
-        value = np.tanh(np.mean(list(move_scores.values()))) if move_scores else 0.0
-
-        return move_probs, value
+    def expand(self, policy):
+        """ הרחבת הצומת עם מהלכים חוקיים והסתברויות מה-policy. """
+        for move in self.untried_actions:
+            if move not in self.children:
+                self.children[move] = PUCTNode(
+                    game=self.game.clone(),  # יצירת עותק חדש של המשחק
+                    parent=self,
+                    action=move,
+                    prior = policy.get(move, 0) # השמת P מתוך ה-policy
+                )
+        self.untried_actions = []  # כל המהלכים נוסו, הצומת מורחב במלואו
 
 
-    def evaluate_game(self, game):
-        if game.scores[PLAYER_1] > game.scores[PLAYER_2]:
-            return 1
-        elif game.scores[PLAYER_2] > game.scores[PLAYER_1]:
-            return -1
-        else:
-            return 0
+    def update(self, value):
+        """עדכון ערך הצומת לאחר סימולציה."""
+        self.value += value
+        self.visit_count += 1
 
-    def evaluate_random_multiple(self, game, num_simulations=10):
-        values = []
-        for _ in range(num_simulations):
-            move_probs, value = self.evaluate_random(game)
-            values.append(value)
+    def __str__(self):
+        """Return a readable string representation of the node."""
+        return (f"Action: {self.action}, Visits: {self.visit_count}, "
+                f"Value: {self.value:.2f}, Children: {len(self.children)}, Prior: {self.prior}")
 
-        mean_value = np.mean(values)
-        print(f"Num Simulations: {num_simulations}, Values: {values}, Mean Value: {mean_value}")
-        return mean_value
+    def __repr__(self):
+        """Return a detailed string representation for debugging."""
+        return self.__str__()
+
+    def print_tree(self, indent=0):
+        """פונקציה להדפסת העץ בצורה היררכית"""
+        # הדפסת המידע של הצומת הנוכחי
+        if self.visit_count > 0:
+            print(" " * indent + str(self))
+
+        # הדפסת כל הילדים של הצומת
+        for action, child in self.children.items():
+            child.print_tree(indent + 2)  # הוספת רווחים עבור רמת ההיררכיה
+

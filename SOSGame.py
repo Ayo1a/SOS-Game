@@ -1,6 +1,7 @@
 import random
 import numpy as np
 from constant import *
+from PUCTPlayer import *
 
 class SOSGame:
 
@@ -11,6 +12,11 @@ class SOSGame:
         self.scores = {PLAYER_1: 0, PLAYER_2: 0}
         self.game_over = False
         self.move_history = []
+
+    def set(self, board = np.full((BOARD_SIZE, BOARD_SIZE), ' ', dtype=str), current_player = PLAYER_1,  scores = {PLAYER_1: 0, PLAYER_2: 0}):
+        self.board = board
+        self.current_player = current_player
+        self.scores = scores
 
     def make_move(self, x, y, letter):
         """Executes a move and updates the score. The turn always switches after a move."""
@@ -99,6 +105,20 @@ class SOSGame:
         #print(f"Total SOS sequences found for ({x},{y}): {len(seen_sos)}")  # ⚡ הדפסה לבדיקת תקינות
         return len(seen_sos), sos_coordinates  # מחזירים את מספר הרצפים והרשימה שלהם
 
+    def get_affected_positions(self, move):
+        """ מחזירה רשימה של כל התאים שיכולים להיות מושפעים מהמהלך שנעשה ב-(x, y).
+            מכסה גם תאים במרחק 1 וגם תאים במרחק 2 בכל כיוון. """
+        x, y, letter = move
+
+        directions = [(-1, -1), (-1, 0), (-1, 1),
+                      (0, -1), (0, 1),
+                      (1, -1), (1, 0), (1, 1)]  # 8 הכיוונים האפשריים
+
+        return [(x + dx * step, y + dy * step)  # חישוב נקודות מושפעות
+                for dx, dy in directions for step in [1, 2]
+                if self.is_valid(x + dx * step, y + dy * step) and
+                self.board[x + dx * step, y + dy * step] == ' ']
+
 
     def display_board(self):
         """Displays the game board in a readable format."""
@@ -119,10 +139,19 @@ class SOSGame:
 
 
 # Game Loop
-
 def play_game():
-    """Runs an interactive game loop."""
+    """ריצה של המשחק עם השחקן האנושי והמחשב (עכשיו עם PUCT)."""
     game = SOSGame()
+    game.set(board= np.array([
+        [' ', 'O', 'O', ' ', ' '],
+        ['S', 'S', ' ', 'S', 'O'],
+        ['S', ' ', 'O', 'O', ' '],
+        ['O', 'S', 'O', 'S', ' '],
+        [' ', ' ', ' ', 'O', 'O']
+    ], dtype=str), current_player=PLAYER_2, scores={PLAYER_1: 2, PLAYER_2: 1})
+
+    puct_player = PUCTPlayer(c_puct=5.0, simulations=20)
+
     while not game.game_over:
         game.display_board()
         print(f"Player {game.current_player}'s turn")
@@ -138,16 +167,17 @@ def play_game():
                     break
                 except Exception as e:
                     print(f"Invalid move: {e}. Try again.")
-
         else:
             print("Computer's turn...")
-            game.computer_move()
+            move = puct_player.play(game)
+            x, y, letter = move
+            game.make_move(x, y, letter)
 
         print(f"Current scores - Player 1: {game.scores[PLAYER_1]}, Player 2: {game.scores[PLAYER_2]}")
 
     game.display_board()
     print(game.status())
 
-
 if __name__ == "__main__":
     play_game()
+
