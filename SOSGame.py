@@ -154,9 +154,9 @@ def play_game():
         ['S', ' ', 'O', 'O', ' '],
         ['O', 'S', 'O', 'S', ' '],
         [' ', ' ', ' ', 'O', 'O']
-    ], dtype=str), current_player=PLAYER_2, scores={PLAYER_1: 2, PLAYER_2: 1})
+    ], dtype=str), current_player=PLAYER_2, scores={PLAYER_1: 3, PLAYER_2: 0})
 
-    puct_player = PUCTPlayer(c_puct=5.0, simulations=40)
+    puct_player = PUCTPlayer(c_puct=5.0, simulations=2)
 
     while not game.game_over:
         game.display_board()

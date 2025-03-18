@@ -9,21 +9,31 @@ class PUCTPlayer:
         self.c_puct = c_puct
         self.simulations = simulations
         self.visited_nodes = {}  # מילון לשמירת צמתים
+        self.root = None  # שמירת ה-root בין הסימולציות
 
     def play(self, game):
         """ביצוע מהלך בעזרת PUCT ו-MCTS."""
-        root = self.get_or_create_node(game)
+        if self.root is None or self.get_board_state(game) not in self.visited_nodes:
+            self.root = self.get_or_create_node(game)  # שמירה על ה-root
+
         for i in range(self.simulations):
             print(f"Running simulation {i + 1} of {self.simulations}")
-            self.simulate(root)
+            value = self.simulate(self.root)
+            self.root.update(value)
+        self.root.print_tree()
+
 
         # בחירת המהלך הטוב ביותר
         best_action = max(
-            root.children.items(),
-            key=lambda child: child[1].value / (child[1].visit_count + 1e-6)  # הימנע מחלוקה ב-0
+            self.root.children.items(),
+            key=lambda child: child[1].value / (child[1].visit_count + 1e-6)
         )[0]
 
-        root.print_tree()
+        # 🔹 **עדכון ה-root אחרי בחירת המהלך**
+        if best_action in self.root.children:
+            self.root = self.root.children[best_action]
+            self.root.parent = None  # ניתוק מההורה כדי לחסוך זיכרון
+
         return best_action
 
     def get_or_create_node(self, game):
@@ -69,7 +79,7 @@ class PUCTPlayer:
         node.game.make_move(row, col, letter)
 
         # עדכון הנתונים של הילד
-        child.game = node.game.clone()
+        child.set_game(node.game.clone())
 
         # **הרצת סימולציה על הילד**
         value = self.simulate(child)
