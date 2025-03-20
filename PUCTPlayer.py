@@ -10,6 +10,7 @@ class PUCTPlayer:
         self.simulations = simulations
         self.visited_nodes = {}  # מילון לשמירת צמתים
         self.root = None  # שמירת ה-root בין הסימולציות
+        self.state_to_node = {}
 
     def play(self, game):
         """ביצוע מהלך בעזרת PUCT ו-MCTS."""
@@ -39,12 +40,14 @@ class PUCTPlayer:
     def get_or_create_node(self, game):
         """מחפש או יוצר צומת חדש."""
         game_state = self.get_board_state(game)
-        if game_state in self.visited_nodes:
-            return self.visited_nodes[game_state]
-        else:
-            node = PUCTNode(game)
-            self.visited_nodes[game_state] = node
-            return node
+        if game_state in self.state_to_node:
+            print(f"🔄 Using existing node for state: {game_state}")
+            return self.state_to_node[game_state]  # מחזיר את הצומת הקיים
+
+        print(f"🆕 Creating new node for state: {game_state}")
+        node = PUCTNode(game)
+        self.state_to_node[game_state] = node
+        return node
 
     def get_board_state(self, game):
         """החזרת ייצוג מצב הלוח."""
@@ -79,7 +82,7 @@ class PUCTPlayer:
         node.game.make_move(row, col, letter)
 
         # עדכון הנתונים של הילד
-        child.set_game(node.game.clone())
+        child.set_game_and_clear_previous_data(node.game.clone())
 
         # **הרצת סימולציה על הילד**
         value = self.simulate(child)
