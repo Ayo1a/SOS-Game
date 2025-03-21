@@ -18,11 +18,10 @@ class PUCTPlayer:
             self.root = self.get_or_create_node(game)  # שמירה על ה-root
 
         for i in range(self.simulations):
-            print(f"Running simulation {i + 1} of {self.simulations}")
+            #print(f"Running simulation {i + 1} of {self.simulations}")
             value = self.simulate(self.root)
             self.root.update(value)
-        self.root.print_tree()
-
+        #self.root.print_tree()
 
         # בחירת המהלך הטוב ביותר
         best_action = max(
@@ -33,7 +32,6 @@ class PUCTPlayer:
         # 🔹 **עדכון ה-root אחרי בחירת המהלך**
         if best_action in self.root.children:
             self.root = self.root.children[best_action]
-            self.root.parent = None  # ניתוק מההורה כדי לחסוך זיכרון
 
         return best_action
 
@@ -41,10 +39,10 @@ class PUCTPlayer:
         """מחפש או יוצר צומת חדש."""
         game_state = self.get_board_state(game)
         if game_state in self.state_to_node:
-            print(f"🔄 Using existing node for state: {game_state}")
+            #print(f"🔄 Using existing node for state: {game_state}")
             return self.state_to_node[game_state]  # מחזיר את הצומת הקיים
 
-        print(f"🆕 Creating new node for state: {game_state}")
+        #print(f"🆕 Creating new node for state: {game_state}")
         node = PUCTNode(game)
         self.state_to_node[game_state] = node
         return node
@@ -62,33 +60,23 @@ class PUCTPlayer:
         # שלב הבחירה: האם להרחיב צומת חדש או לבחור מהלך קיים
         if not node.children:
             policy, value = self.evaluate_random(node.game)
-            node.expand(policy)  # הרחבת הצומת
+            node.expand(policy, self)  # הרחבת הצומת
 
-            # בדיקה אם הפוליסי ריק
             if not policy or all(val is None for val in policy.values()):
                 return self.evaluate_game(node.game)  # אין מהלכים חוקיים
 
-            # מציאת המהלכים הטובים ביותר
+            # מציאת המהלך הטוב ביותר
             max_value = max(policy.values())
             best_moves = [move for move, val in policy.items() if val == max_value]
-
             best_move = random.choice(best_moves)
-            child = node.children[best_move]  # קישור הצומת לילד החדש
         else:
-            best_move, child = node.select(self.c_puct)  # בחירה בעזרת PUCT
+            best_move, _ = node.select(self.c_puct)  # בחירה בעזרת PUCT
 
-        # **ביצוע המהלך**
-        row, col, letter = best_move
-        node.game.make_move(row, col, letter)
-
-        # עדכון הנתונים של הילד
-        child.set_game_and_clear_previous_data(node.game.clone())
+        # 🔹 מציאת הילד דרך `get_or_create_node`
+        child = node.children[best_move]  # חיפוש או יצירה
 
         # **הרצת סימולציה על הילד**
         value = self.simulate(child)
-
-        # **שחזור מצב המשחק**
-        node.game.unmake_move()
 
         # **עדכון הצומת**
         child.update(value)

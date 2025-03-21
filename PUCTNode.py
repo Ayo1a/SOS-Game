@@ -4,9 +4,8 @@ import numpy as np
 from constant import *
 
 class PUCTNode:
-    def __init__(self, game, parent=None, action=None, prior=0):
+    def __init__(self, game, action=None, prior=0):
         self.game = game
-        self.parent = parent
         self.action = action  # הפעולה שהובילה לצומת הזה
         self.children = {}  # צמתים ילדים
         self.visit_count = 0
@@ -34,10 +33,10 @@ class PUCTNode:
                 continue  # מדלגים על מהלכים לא חוקיים
 
             # חישוב Q-value
-            q_value = child_node.value / (child_node.visit_count + 1e-4)
+            q_value = child_node.value / (child_node.visit_count + 1)
 
             # חישוב רכיב ה-exploration
-            exploration_term = c_puct * child_node.prior * math.sqrt(math.log(self.visit_count + 1) / (child_node.visit_count + 1e-4))
+            exploration_term = c_puct * child_node.prior * math.sqrt(math.log(self.visit_count) / (child_node.visit_count + 1))
 
             # חישוב UCB
             ucb = q_value + exploration_term
@@ -51,16 +50,25 @@ class PUCTNode:
 
         return random.choice(best_actions)
 
-    def expand(self, policy):
-        """ הרחבת הצומת עם מהלכים חוקיים והסתברויות מה-policy. """
+    def expand(self, policy, player):
+        """הרחבת הצומת תוך שימוש ב- get_or_create_node כדי למנוע כפילות"""
         for move in self.untried_actions:
             if move not in self.children:
-                self.children[move] = PUCTNode(
-                    game=self.game.clone(),  # יצירת עותק חדש של המשחק
-                    parent=self,
-                    action=move,
-                    prior = policy.get(move, 0) # השמת P מתוך ה-policy
-                )
+                # מבצעים את המהלך על המשחק הנוכחי
+                self.game.make_move(*move)
+
+                # 🔹 במקום ליצור PUCTNode חדש, משתמשים ב- get_or_create_node
+                child_node = player.get_or_create_node(self.game.clone())
+
+                # עדכון הורה ופרטי המהלך
+                child_node.action = move
+                child_node.prior = policy.get(move, 0)
+
+                self.children[move] = child_node  # הוספת הצומת לילדים
+
+                # שחזור המהלך (כי self.game הוא עותק חי!)
+                self.game.unmake_move()
+
         self.untried_actions = []  # כל המהלכים נוסו, הצומת מורחב במלואו
         self.is_fully_expanded = True
 
@@ -71,7 +79,7 @@ class PUCTNode:
         self.value = (self.value * self.visit_count + value) / (self.visit_count + 1)
         self.visit_count += 1
 
-        print(f"Node ID: {id(self)} Action: {self.action}| Visits: {self.visit_count}, Value: {self.value:.2f}")
+        #print(f"Node ID: {id(self)} Action: {self.action}| Visits: {self.visit_count}, Value: {self.value:.2f}")
 
     def __str__(self):
         """Return a readable string representation of the node."""
