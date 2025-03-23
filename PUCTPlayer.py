@@ -93,14 +93,14 @@ class PUCTPlayer:
         opponent = PLAYER_1 if current_player == PLAYER_2 else PLAYER_2  # זיהוי היריב
 
         # 1️⃣ **חישוב מראש את כל הרווחים שלי לכל מהלך**
-        all_move_gains = {}
-        for move in legal_moves:
+        all_move_gains = {} #amount of SOS
+        for move in legal_moves: #runs on all legal moves 
             x, y, letter = move
             game.make_move(*move)
             all_move_gains[move] = game.check_sos(x, y)[0]  # כמה SOS נוצרו
             game.unmake_move()
 
-        move_scores = {}
+        move_scores = {} #scores for legal moves, considering profit and threat
 
         # 2️⃣ **חישוב ציון לכל מהלך חוקי**
         for move in legal_moves:
@@ -128,6 +128,16 @@ class PUCTPlayer:
 
             # 6️⃣ **חישוב ציון סופי**
             move_scores[move] = (gain * 3) - (worst_case * 2)  # שיפור חסימת SOS
+            ''' option 1 '''
+            w_gain = 3 # immediate profit
+            w_opponent = 2 # The opponent's expected profit
+            w_missed = 1 # The profit potential that the current player may miss
+            score = (gain * w_gain) - (opponent_best_gain * w_opponent) - (best_remaining_gain * w_missed)
+            
+            ''' option 2 '''
+            immediate_gain = gain
+            E = best_remaining_gain #E[V(s')]
+            score(s, a) = immediate_gain + γ * E
 
         # 7️⃣ **חישוב הסתברות לפי Softmax**
         if all(score == 0 for score in move_scores.values()):
