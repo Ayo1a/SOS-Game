@@ -3,34 +3,63 @@ import torch.nn as nn
 import torch.nn.functional as F
 
 class GameNetwork(nn.Module):
-    def __init__(self):
+    def __init__(self, board_size=5):  # שינוי לגודל לוח חדש
         super(GameNetwork, self).__init__()
-        # Convolutional layers with batch normalization
+        self.board_size = board_size
+
         self.conv_layers = nn.Sequential(
             nn.Conv2d(3, 64, kernel_size=3, padding=1),
             nn.BatchNorm2d(64),
             nn.ReLU(),
             nn.Conv2d(64, 128, kernel_size=3, padding=1),
             nn.BatchNorm2d(128),
+            nn.ReLU(),
+            nn.Conv2d(128, 128, kernel_size=3, padding=1),
+            nn.BatchNorm2d(128),
             nn.ReLU()
         )
-        # Fully connected layers
+
+        self.residual_block = nn.Sequential(
+            nn.Conv2d(128, 128, kernel_size=3, padding=1),
+            nn.BatchNorm2d(128),
+            nn.ReLU(),
+            nn.Conv2d(128, 128, kernel_size=3, padding=1),
+            nn.BatchNorm2d(128)
+        )
+
+        # עדכון שכבות Fully Connected בהתאם לגודל החדש
         self.fc_layers = nn.Sequential(
-            nn.Linear(128 * 8 * 8, 256),
+            nn.Linear(128 * board_size * board_size, 256),
+            nn.ReLU(),
+            nn.Linear(256, 256),
             nn.ReLU()
         )
-        # Policy and value heads
-        self.policy_head = nn.Linear(256, 8 * 8 * 2)
-        self.value_head = nn.Linear(256, 1)
+
+        # ראש המדיניות - שינוי גודל הפלט בהתאם ללוח 5x5
+        self.policy_head = nn.Sequential(
+            nn.Conv2d(128, 2, kernel_size=1),
+            nn.Flatten(),
+            nn.Linear(2 * board_size * board_size, board_size * board_size * 2),
+            nn.Softmax(dim=-1)
+        )
+
+        # ראש הערך - שינוי גודל הפלט בהתאם ללוח 5x5
+        self.value_head = nn.Sequential(
+            nn.Conv2d(128, 1, kernel_size=1),
+            nn.Flatten(),
+            nn.Linear(board_size * board_size, 256),
+            nn.ReLU(),
+            nn.Linear(256, 1),
+            nn.Tanh()
+        )
 
     def forward(self, x):
         x = self.conv_layers(x)
-        x = x.view(x.size(0), -1)  # Flatten for FC layers
-        x = self.fc_layers(x)
+        x = x + self.residual_block(x)  # חיבור רזידואלי
+        x = F.relu(x)
 
-        # Policy and value outputs
-        policy = F.softmax(self.policy_head(x), dim=-1).view(-1, 8, 8, 2)
-        value = torch.tanh(self.value_head(x))
+        policy = self.policy_head(x).view(-1, self.board_size, self.board_size, 2)
+        value = self.value_head(x)
 
         return policy, value
 

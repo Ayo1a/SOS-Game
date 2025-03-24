@@ -3,6 +3,7 @@ import numpy as np
 from constant import *
 import copy
 from PUCTPlayer import *
+from GameNetwork import *
 
 class SOSGame:
 
@@ -143,6 +144,28 @@ class SOSGame:
         if legal_moves:
             self.make_move(*random.choice(legal_moves))
 
+def train_loop(network, num_iterations=100, games_per_iteration=1000, model_path='model.h5'):
+    for iteration in range(num_iterations):
+        player = PUCTPlayer(network)
+        game_data = []
+
+        for _ in range(games_per_iteration):
+            game = SOSGame()
+            root = player.self_play(game)
+            game_data.append((game.get_encoded_state(), root))
+
+        states, policies, values = [], [], []
+        for state, root in game_data:
+            policy_target = np.zeros(root.game.action_size)
+            for move, child in root.children.items():
+                policy_target[move] = child.visit_count
+            policy_target /= policy_target.sum()
+            states.append(state)
+            policies.append(policy_target)
+            values.append(root.value)
+
+        network.train(states, policies, values)
+        network.save_weights(model_path)
 
 # Game Loop
 def play_game():
@@ -185,5 +208,10 @@ def play_game():
     print(game.status())
 
 if __name__ == "__main__":
-    play_game()
+    #play_game()
+    input_shape = (BOARD_SIZE, BOARD_SIZE, 1)  # גודל לוח SOS
+    action_size = BOARD_SIZE*BOARD_SIZE  # מספר פעולות אפשריות
+    network = GameNetwork(input_shape, action_size)
+    train_loop(network)
+
 

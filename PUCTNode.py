@@ -14,14 +14,6 @@ class PUCTNode:
         self.untried_actions = game.legal_moves()  # מהלכים שעדיין לא נוסו
         self.prior = prior  # הסתברות ראשונית של המהלך (P)
 
-    def set_game_and_clear_previous_data(self, new_game):
-        """ Update the node with a new game state """
-        self.game = new_game
-        self.untried_actions = new_game.legal_moves()  # Recalculate legal moves
-        self.children.clear()  # Remove previous children if state has changed
-        self.visit_count = 0
-        self.total_value = 0  # Reset accumulated values
-
     def select(self, c_puct):
         """בחר פעולה על פי Upper Confidence Bound for Trees (PUCT)."""
         best_actions = []
