@@ -5,7 +5,7 @@ from SOSGame import *
 
 
 class PUCTPlayer:
-    def __init__(self, c_puct=1.0, network, simulations=5):
+    def __init__(self, c_puct=1.0, network = None, simulations=5):
         self.c_puct = c_puct
         self.simulations = simulations
         self.visited_nodes = {}  # מילון לשמירת צמתים
@@ -66,8 +66,10 @@ class PUCTPlayer:
 
         # שלב הבחירה: האם להרחיב צומת חדש או לבחור מהלך קיים
         if not node.children:
-            #policy, value = self.evaluate_random(node.game)
-            policy, value = self.network.predict(node.game.encode())
+            if self.network is None:
+                policy, value = self.evaluate_random(node.game)
+            else:
+                policy, value = self.network.predict(node.game.encode())
             node.expand(policy, self)  # הרחבת הצומת
 
             if not policy or all(val is None for val in policy.values()):

@@ -208,10 +208,10 @@ def play_game():
     print(game.status())
 
 if __name__ == "__main__":
-    #play_game()
-    input_shape = (BOARD_SIZE, BOARD_SIZE, 1)  # גודל לוח SOS
-    action_size = BOARD_SIZE*BOARD_SIZE  # מספר פעולות אפשריות
-    network = GameNetwork(input_shape, action_size)
-    train_loop(network)
+    play_game()
+    #input_shape = (BOARD_SIZE, BOARD_SIZE, 1)  # גודל לוח SOS
+    #action_size = BOARD_SIZE*BOARD_SIZE  # מספר פעולות אפשריות
+    #network = GameNetwork(input_shape, action_size)
+    #train_loop(network)
 
 
