@@ -2,8 +2,9 @@ import random
 import numpy as np
 from constant import *
 import copy
+import os
+import torch
 from PUCTPlayer import *
-from GameNetwork import *
 
 class SOSGame:
 
@@ -62,14 +63,30 @@ class SOSGame:
         return cloned_game
 
     def encode(self):
-        """Encodes the game state as a one-hot tensor and extra information."""
+        """
+        מקודד את מצב המשחק כמטריצת one-hot עם מידע נוסף.
+        הפלט הוא מערך בגודל [7, BOARD_SIZE, BOARD_SIZE] כאשר:
+          - הערוצים 0-2: one-hot encoding של הלוח עבור 'S', 'O' ו־' '.
+          - הערוצים 3-6: מידע נוסף (מי השחקן הנוכחי, ניקוד לשחקן 1, ניקוד לשחקן 2, האם המשחק נגמר)
+        """
+        # קידוד one-hot של הלוח (3 ערוצים)
         encoded_board = np.stack([
-            np.array(self.board == 'S', dtype=np.float32),
-            np.array(self.board == 'O', dtype=np.float32),
-            np.array(self.board == ' ', dtype=np.float32)
+            (self.board == 'S').astype(np.float32),
+            (self.board == 'O').astype(np.float32),
+            (self.board == ' ').astype(np.float32)
         ])
-        extra_info = np.array([self.current_player - 1, self.scores[1], self.scores[2], self.game_over], dtype=np.float32)
-        return encoded_board, extra_info
+
+        # מידע נוסף: current_player, score of PLAYER_1, score of PLAYER_2, game_over (0 או 1)
+        extra_info = np.array([self.current_player - 1, self.scores[1], self.scores[2], self.game_over],
+                              dtype=np.float32)
+
+        # הרחבת extra_info למימדים תואמים ללוח: [4, BOARD_SIZE, BOARD_SIZE]
+        extra_info = np.repeat(extra_info[:, np.newaxis, np.newaxis], BOARD_SIZE, axis=1)
+        extra_info = np.repeat(extra_info, BOARD_SIZE, axis=2)
+
+        # חיבור הלוח עם המידע הנוסף – מקבלים מערך בגודל [7, BOARD_SIZE, BOARD_SIZE]
+        encoded_state = np.concatenate([encoded_board, extra_info], axis=0)
+        return encoded_state
 
     @staticmethod
     def decode(index):
@@ -143,75 +160,3 @@ class SOSGame:
         legal_moves = self.legal_moves()
         if legal_moves:
             self.make_move(*random.choice(legal_moves))
-
-def train_loop(network, num_iterations=100, games_per_iteration=1000, model_path='model.h5'):
-    for iteration in range(num_iterations):
-        player = PUCTPlayer(network)
-        game_data = []
-
-        for _ in range(games_per_iteration):
-            game = SOSGame()
-            root = player.self_play(game)
-            game_data.append((game.get_encoded_state(), root))
-
-        states, policies, values = [], [], []
-        for state, root in game_data:
-            policy_target = np.zeros(root.game.action_size)
-            for move, child in root.children.items():
-                policy_target[move] = child.visit_count
-            policy_target /= policy_target.sum()
-            states.append(state)
-            policies.append(policy_target)
-            values.append(root.value)
-
-        network.train(states, policies, values)
-        network.save_weights(model_path)
-
-# Game Loop
-def play_game():
-    """ריצה של המשחק עם השחקן האנושי והמחשב (עכשיו עם PUCT)."""
-    game = SOSGame()
-    game.set(board= np.array([
-        [' ', 'O', 'O', ' ', ' '],
-        ['S', 'S', ' ', 'S', 'O'],
-        ['S', ' ', 'O', 'O', ' '],
-        ['O', 'S', 'O', 'S', ' '],
-        [' ', ' ', ' ', 'O', 'O']
-    ], dtype=str), current_player=PLAYER_2, scores={PLAYER_1: 3, PLAYER_2: 0})
-
-    puct_player = PUCTPlayer(c_puct=1.0, simulations=5) #c_puct = explotation/exploration balance 
-
-    while not game.game_over:
-        game.display_board()
-        print(f"Player {game.current_player}'s turn")
-
-        if game.current_player == PLAYER_1:
-            while True:
-                try:
-                    move = input("Enter move (row col letter): ").split()
-                    if len(move) != 3:
-                        raise ValueError("Invalid format. Use: row col letter")
-                    x, y, letter = int(move[0]), int(move[1]), move[2].lower()
-                    game.make_move(x, y, letter)
-                    break
-                except Exception as e:
-                    print(f"Invalid move: {e}. Try again.")
-        else:
-            print("Computer's turn...")
-            move = puct_player.play(game)
-            x, y, letter = move
-            game.make_move(x, y, letter)
-
-        print(f"Current scores - Player 1: {game.scores[PLAYER_1]}, Player 2: {game.scores[PLAYER_2]}")
-
-    game.display_board()
-    print(game.status())
-
-if __name__ == "__main__":
-    play_game()
-    #input_shape = (BOARD_SIZE, BOARD_SIZE, 1)  # גודל לוח SOS
-    #action_size = BOARD_SIZE*BOARD_SIZE  # מספר פעולות אפשריות
-    #network = GameNetwork(input_shape, action_size)
-    #train_loop(network)
-
-

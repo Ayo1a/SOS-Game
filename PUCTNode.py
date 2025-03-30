@@ -1,6 +1,8 @@
 import math
 import random
 import numpy as np
+import torch
+
 from constant import *
 
 class PUCTNode:
@@ -42,7 +44,25 @@ class PUCTNode:
 
         return random.choice(best_actions)
 
+
     def expand(self, policy, player):
+        """
+        מרחיב את הצומת לפי ה-policy.
+        אם policy הוא טנזור, נמיר אותו למילון עם מפתחות בצורה (i, j, 'S') ו-(i, j, 'O').
+        """
+        # אם policy הוא טנזור, המר אותו למילון:
+        if isinstance(policy, torch.Tensor):
+            # המרה ל-numpy
+            policy_np = policy.cpu().numpy()
+            # הנחה: הממדים הם [BOARD_SIZE, BOARD_SIZE, 2]
+            policy_dict = {}
+            for i in range(policy_np.shape[0]):
+                for j in range(policy_np.shape[1]):
+                    # עבור k=0, k=1 - המרת 0 ל-'S' ו-1 ל-'O'
+                    policy_dict[(i, j, 'S')] = policy_np[i, j, 0]
+                    policy_dict[(i, j, 'O')] = policy_np[i, j, 1]
+            policy = policy_dict  # עדכון ה-policy למילון
+
         """הרחבת הצומת תוך שימוש ב- get_or_create_node כדי למנוע כפילות"""
         for move in self.untried_actions:
             if move not in self.children:
@@ -54,7 +74,7 @@ class PUCTNode:
 
                 # עדכון הורה ופרטי המהלך
                 child_node.action = move
-                child_node.prior = policy.get(move, 0)
+                child_node.prior = policy.get(move, 0.0)  # ודא ש-policy הוא מילון
 
                 self.children[move] = child_node  # הוספת הצומת לילדים
 
@@ -64,7 +84,8 @@ class PUCTNode:
         self.untried_actions = []  # כל המהלכים נוסו, הצומת מורחב במלואו
         self.is_fully_expanded = True
 
-        #print(f"Expanding node: {self.action}, new children: {len(self.children)}, {self.children}")
+        # print(f"Expanding node: {self.action}, new children: {len(self.children)}, {self.children}")
+
 
     def update(self, value):
         """עדכון ערך הצומת לאחר סימולציה."""

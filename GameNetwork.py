@@ -1,3 +1,4 @@
+import numpy as np
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
@@ -8,7 +9,7 @@ class GameNetwork(nn.Module):
         self.board_size = board_size
 
         self.conv_layers = nn.Sequential(
-            nn.Conv2d(3, 64, kernel_size=3, padding=1),
+            nn.Conv2d(7, 64, kernel_size=3, padding=1),
             nn.BatchNorm2d(64),
             nn.ReLU(),
             nn.Conv2d(64, 128, kernel_size=3, padding=1),
@@ -62,6 +63,33 @@ class GameNetwork(nn.Module):
         value = self.value_head(x)
 
         return policy, value
+
+    def predict(self, game_state):
+        """
+        מחשב חיזוי (מדיניות וערך) עבור מצב משחק.
+        אם game_state הוא מערך (numpy.ndarray), מניחים שהוא כבר מקודד.
+        אחרת, קוראים ל־encode() כדי לקבל קידוד מתאים.
+        """
+        # בדיקה אם הקלט כבר הוא מערך numpy
+        if not isinstance(game_state, np.ndarray):
+            # אם לא, מקודדים את מצב המשחק
+            encoded_state = game_state.encode()  # מצופה להחזיר [7, BOARD_SIZE, BOARD_SIZE]
+        else:
+            encoded_state = game_state
+
+        # המרת הקידוד לטנסור והוספת ממד batch: [1, 7, BOARD_SIZE, BOARD_SIZE]
+        input_tensor = torch.tensor(encoded_state, dtype=torch.float32).unsqueeze(0)
+
+        # חיזוי ללא גרדיאנטים
+        with torch.no_grad():
+            policy, value = self(input_tensor)
+
+        # לעיתים יש צורך בעיבוד נוסף (כמו שינוי צורה), תלוי באיך הפלט נדרש
+        # כאן למשל, אם הפלט הוא [1, BOARD_SIZE, BOARD_SIZE, 2], אפשר להסיר את ממד ה-batch:
+        policy = policy.squeeze(0)
+
+        # החזרת הפלט (ניתן לעבד את הפלט למילון כפי שתרצי)
+        return policy, value.item()
 
     def save_weights(self, path):
         torch.save(self.state_dict(), path)

@@ -36,12 +36,6 @@ class PUCTPlayer:
 
         return best_action
 
-    def self_play(self, game, num_simulations=1000):
-        root = self.get_or_create_node(game)
-        for _ in range(num_simulations):
-            self.simulate(root)
-        return root
-
     def get_or_create_node(self, game):
         """מחפש או יוצר צומת חדש."""
         game_state = self.get_board_state(game)
@@ -58,41 +52,74 @@ class PUCTPlayer:
         """החזרת ייצוג מצב הלוח."""
         return tuple(tuple(row) for row in game.board)
 
+    import random
+
     def simulate(self, node):
         """ביצוע סימולציה מתוך MCTS."""
 
+        # אם המשחק נגמר, מחזירים הערכה סופית של הלוח
         if node.game.game_over:
-            return self.evaluate_game(node.game)  # אם המשחק נגמר, מחזירים הערכה
+            return self.evaluate_game(node.game)
 
-        # שלב הבחירה: האם להרחיב צומת חדש או לבחור מהלך קיים
+        # 🔹 שלב הבחירה: הרחבת צומת חדש או בחירת מהלך קיים
         if not node.children:
-            if self.network is None:
-                policy, value = self.evaluate_random(node.game)
-            else:
-                policy, value = self.network.predict(node.game.encode())
-            node.expand(policy, self)  # הרחבת הצומת
+            # קבלת מדיניות והערכה מהרשת אם קיימת, אחרת שימוש בהערכה רנדומלית
+            policy, value = (
+                self.network.predict(node.game.encode())
+                if self.network else self.evaluate_random(node.game)
+            )
 
-            if not policy or all(val is None for val in policy.values()):
-                return self.evaluate_game(node.game)  # אין מהלכים חוקיים
+            # הרחבת הצומת עם המדיניות שחושבה
+            node.expand(policy, self)
 
-            # מציאת המהלך הטוב ביותר
-            max_value = max(policy.values())
-            best_moves = [move for move, val in policy.items() if val == max_value]
-            best_move = random.choice(best_moves)
+            # שליפת המהלכים החוקיים
+            legal_moves = node.game.legal_moves()
+
+            # אם אין מהלכים חוקיים, מחזירים הערכת משחק
+            if not legal_moves:
+                return self.evaluate_game(node.game)
+
+            # ווידוא שהמדיניות היא מילון תקין
+            if isinstance(policy, torch.Tensor):
+                policy_np = policy.cpu().numpy()
+                policy_dict = {
+                    (i, j, piece): policy_np[i, j, idx]
+                    for i in range(policy_np.shape[0])
+                    for j in range(policy_np.shape[1])
+                    for idx, piece in enumerate(['S', 'O'])
+                }
+                policy = policy_dict
+
+            if not isinstance(policy, dict):
+                raise TypeError(f"Expected policy to be a dictionary, but got {type(policy)}")
+
+            # ווידוא שכל המהלכים החוקיים קיימים במדיניות
+            missing_moves = [move for move in legal_moves if move not in policy]
+            if missing_moves:
+                print(f"⚠️ Warning: The following legal moves are missing in policy: {missing_moves}")
+
+            # בחירת המהלך עם ההסתברות הגבוהה ביותר
+            max_value = max(policy.get(move, 0.0) for move in legal_moves)
+            best_moves = [move for move in legal_moves if policy.get(move, 0.0) == max_value]
+            best_move = random.choice(best_moves) if best_moves else random.choice(legal_moves)
+
         else:
-            best_move, _ = node.select(self.c_puct)  # בחירה בעזרת PUCT
+            # 🔹 בחירה לפי PUCT אם לצומת יש ילדים
+            best_move, _ = node.select(self.c_puct)
 
-        # 🔹 מציאת הילד דרך `get_or_create_node`
-        child = node.children[best_move]  # חיפוש או יצירה
+        # 🔹 מציאת הילד המתאים וביצוע סימולציה עליו
+        print(f"best_move = {best_move}")
+        child = node.children.get(best_move)  # שימוש ב-get כדי למנוע KeyError
 
-        # **הרצת סימולציה על הילד**
-        value = self.simulate(child)
+        if child is None:
+            raise ValueError(f"Child node for move {best_move} not found in node.children!")
 
-        # **עדכון הצומת**
+        value = self.simulate(child)  # המשך הסימולציה
+
+        # 🔹 עדכון הצומת עם הערך שהתקבל
         child.update(value)
 
-        return -value  # החזרת הערך ההפוך כדי להתאים למינימקס
-
+        return -value  # החזרת הערך ההפוך כדי להתאים לאלגוריתם מינימקס
 
     def evaluate_random(self, game):
         """
