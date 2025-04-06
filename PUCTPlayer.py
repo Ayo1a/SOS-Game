@@ -5,7 +5,7 @@ from SOSGame import *
 
 
 class PUCTPlayer:
-    def __init__(self, c_puct=1.0, network = None, simulations=5):
+    def __init__(self, c_puct=1.0, network=None, simulations=5):
         self.c_puct = c_puct
         self.simulations = simulations
         self.visited_nodes = {}  # מילון לשמירת צמתים
@@ -19,15 +19,15 @@ class PUCTPlayer:
             self.root = self.get_or_create_node(game)  # שמירה על ה-root
 
         for i in range(self.simulations):
-            #print(f"Running simulation {i + 1} of {self.simulations}")
+            print(f"Running simulation {i + 1} of {self.simulations}")
             value = self.simulate(self.root)
             self.root.update(value)
-        #self.root.print_tree()
+        self.root.print_tree()
 
         # בחירת המהלך הטוב ביותר
         best_action = max(
             self.root.children.items(),
-            key=lambda child: child[1].value / (child[1].visit_count + 1e-6)
+            key=lambda child: (child[1].visit_count, child[1].value)
         )[0]
 
         # 🔹 **עדכון ה-root אחרי בחירת המהלך**
@@ -51,8 +51,6 @@ class PUCTPlayer:
     def get_board_state(self, game):
         """החזרת ייצוג מצב הלוח."""
         return tuple(tuple(row) for row in game.board)
-
-    import random
 
     def simulate(self, node):
         """ביצוע סימולציה מתוך MCTS."""
@@ -108,7 +106,6 @@ class PUCTPlayer:
             best_move, _ = node.select(self.c_puct)
 
         # 🔹 מציאת הילד המתאים וביצוע סימולציה עליו
-        print(f"best_move = {best_move}")
         child = node.children.get(best_move)  # שימוש ב-get כדי למנוע KeyError
 
         if child is None:
@@ -117,7 +114,7 @@ class PUCTPlayer:
         value = self.simulate(child)  # המשך הסימולציה
 
         # 🔹 עדכון הצומת עם הערך שהתקבל
-        child.update(value)
+        node.update(-value)
 
         return -value  # החזרת הערך ההפוך כדי להתאים לאלגוריתם מינימקס
 
@@ -172,8 +169,8 @@ class PUCTPlayer:
             worst_case = max(best_remaining_gain, opponent_best_gain)
 
             # 6️⃣ **חישוב ציון סופי לכל מהלך**
-            w_gain = 3  # משקל לרווח מיידי
-            w_opponent = 2  # משקל לרווח הצפוי של היריב
+            w_gain = 10  # משקל לרווח מיידי
+            w_opponent = 5  # משקל לרווח הצפוי של היריב
             w_missed = 1  # משקל לרווח שהשחקן הנוכחי עלול להפסיד
 
             score = (gain * w_gain) - (opponent_best_gain * w_opponent) - (best_remaining_gain * w_missed)

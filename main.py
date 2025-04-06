@@ -20,7 +20,7 @@ def play_game():
         [' ', ' ', ' ', 'O', 'O']
     ], dtype=str), current_player=PLAYER_2, scores={PLAYER_1: 3, PLAYER_2: 0})
 
-    puct_player = PUCTPlayer(c_puct=1.0, simulations=5) #c_puct = explotation/exploration balance
+    puct_player = PUCTPlayer(c_puct=10.0, simulations=1) #c_puct = explotation/exploration balance
 
     while not game.game_over:
         game.display_board()
@@ -41,6 +41,7 @@ def play_game():
             print("Computer's turn...")
             move = puct_player.play(game)
             x, y, letter = move
+            print(f"move = ({x}, {y}, {letter})")
             game.make_move(x, y, letter)
 
         print(f"Current scores - Player 1: {game.scores[PLAYER_1]}, Player 2: {game.scores[PLAYER_2]}")

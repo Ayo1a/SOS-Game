@@ -26,15 +26,15 @@ class PUCTNode:
             if not self.game.is_valid(x, y) or self.game.board[x, y] != ' ':
                 continue  # מדלגים על מהלכים לא חוקיים
 
-            # חישוב Q-value
-            q_value = child_node.value / (child_node.visit_count + 1)
+            # חישוב Q-value הוא כבר הממוצע
+            q_value = child_node.value
 
             # חישוב רכיב ה-exploration
             exploration_term = c_puct * child_node.prior * math.sqrt(math.log(self.visit_count) / (child_node.visit_count + 1))
 
             # חישוב UCB
             ucb = q_value + exploration_term
-            #print(f"select Action: {action}, Q: {q_value:.2f}, UCB: {ucb:.2f}, Visits: {child_node.visit_count}")
+            print(f"select Action: {action}, Q: {q_value:.2f}, exploration_term = {exploration_term}, UCB: {ucb:.2f}, Visits: {child_node.visit_count}")
 
             if ucb > best_ucb:
                 best_ucb = ucb
