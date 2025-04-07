@@ -50,7 +50,7 @@ def play_game():
     print(game.status())
 
 
-def train_network(num_games=1000, epochs=10, model_path="sos_weights.pth"):
+def train_network(num_games=10000, epochs=100, model_path="sos_weights.pth"):
     """ מאמן את הרשת באמצעות משחק עצמי ושומר את המשקלים """
 
     # יצירת רשת נוירונים
@@ -64,7 +64,7 @@ def train_network(num_games=1000, epochs=10, model_path="sos_weights.pth"):
         print("No existing model found. Training from scratch.")
 
     # יצירת שחקן עם PUCT
-    player = PUCTPlayer(network=network)
+    player = PUCTPlayer(c_puct=10, network=network, simulations=30)
 
     # יצירת נתוני אימון דרך משחק עצמי
     self_play_trainer = SelfPlayTrainer(player, num_games=num_games)
@@ -80,5 +80,5 @@ def train_network(num_games=1000, epochs=10, model_path="sos_weights.pth"):
 
 
 if __name__ == "__main__":
-    #train_network(num_games=3, epochs=3)
-    play_game()
+    train_network(num_games=3, epochs=3)
+    #play_game()

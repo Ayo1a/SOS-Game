@@ -28,9 +28,22 @@ class SelfPlayTrainer:
             for state, policy in game_data:
                 self.data_buffer.append((state, policy, winner))
 
+
     def extract_policy(self, root):
         """הפקת התפלגות הסתברויות למדיניות מה-MCTS."""
         total_visits = sum(child.visit_count for child in root.children.values())
+
+        if total_visits == 0:
+            legal_moves = root.game.legal_moves()
+            if not legal_moves:
+                print("Warning: No legal moves available in root state!")
+                print("Board:")
+                print(root.game.board)
+                print("Current player:", root.game.current_player)
+                return {}  # or return None, or handle this gracefully in your code
+            uniform_prob = 1 / len(legal_moves)
+            return {move: uniform_prob for move in legal_moves}
+
         return {move: child.visit_count / total_visits for move, child in root.children.items()}
 
 class Trainer:
