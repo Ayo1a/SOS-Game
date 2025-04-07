@@ -22,7 +22,7 @@ class PUCTPlayer:
             print(f"Running simulation {i + 1} of {self.simulations}")
             value = self.simulate(self.root)
             self.root.update(value)
-        self.root.print_tree()
+        #self.root.print_tree()
 
         # בחירת המהלך הטוב ביותר
         best_action = max(
