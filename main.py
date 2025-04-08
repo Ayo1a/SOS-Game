@@ -68,10 +68,18 @@ def train_network(num_games=10000, epochs=100, model_path="sos_weights.pth"):
 
     # יצירת נתוני אימון דרך משחק עצמי
     self_play_trainer = SelfPlayTrainer(player, num_games=num_games)
-    self_play_trainer.generate_training_data()
+
+    # אם יש כבר נתונים קודמים, נטעין אותם
+    #if not self_play_trainer.data_buffer:
+    self_play_trainer.generate_training_data()  # יצירת נתוני אימון אם לא קיימים
+
+    # יצירת מאמן עבור הרשת
+    trainer = Trainer(network, epochs=epochs)
+
+    # טעינת המשקלים הכי טובים אם יש
+    trainer.load_best_weights()
 
     # אימון הרשת על הנתונים שנאספו
-    trainer = Trainer(network, epochs=epochs)
     trainer.train(self_play_trainer.data_buffer)
 
     # שמירת המשקלים בסיום האימון
@@ -80,5 +88,5 @@ def train_network(num_games=10000, epochs=100, model_path="sos_weights.pth"):
 
 
 if __name__ == "__main__":
-    train_network(num_games=3, epochs=3)
+    train_network(num_games=100, epochs=50, model_path="sos_weights.pth")
     #play_game()

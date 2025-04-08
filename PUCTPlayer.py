@@ -19,7 +19,7 @@ class PUCTPlayer:
             self.root = self.get_or_create_node(game)  # שמירה על ה-root
 
         for i in range(self.simulations):
-            print(f"Running simulation {i + 1} of {self.simulations}")
+            #print(f"Running simulation {i + 1} of {self.simulations}")
             value = self.simulate(self.root)
             self.root.update(value)
         #self.root.print_tree()
