@@ -1,3 +1,55 @@
-Epoch 1/3, Loss: 0.9249045848846436
-Epoch 2/3, Loss: 1.0204758644104004
-Epoch 3/3, Loss: 0.7702120542526245
+Loaded best model weights from checkpoints/best_model_epoch_49.pth
+Epoch 1/50, Loss: 0.12991914, Win Rate: 0.12, Accuracy: 0.00
+Epoch 2/50, Loss: 0.12796438, Win Rate: 0.12, Accuracy: 0.00
+Epoch 3/50, Loss: 0.10351031, Win Rate: 0.12, Accuracy: 0.00
+Epoch 4/50, Loss: 0.09372166, Win Rate: 0.12, Accuracy: 0.00
+Epoch 5/50, Loss: 0.08913027, Win Rate: 0.12, Accuracy: 0.00
+Epoch 6/50, Loss: 0.08486097, Win Rate: 0.12, Accuracy: 0.00
+Epoch 7/50, Loss: 0.08157550, Win Rate: 0.12, Accuracy: 0.06
+🔥 New best model found at epoch 7 with accuracy 0.06
+Epoch 8/50, Loss: 0.07951044, Win Rate: 0.12, Accuracy: 0.07
+🔥 New best model found at epoch 8 with accuracy 0.07
+Epoch 9/50, Loss: 0.07577393, Win Rate: 0.12, Accuracy: 0.06
+Epoch 10/50, Loss: 0.07506741, Win Rate: 0.12, Accuracy: 0.03
+Epoch 11/50, Loss: 0.07320035, Win Rate: 0.12, Accuracy: 0.03
+Epoch 12/50, Loss: 0.07112317, Win Rate: 0.12, Accuracy: 0.05
+Epoch 13/50, Loss: 0.07015773, Win Rate: 0.12, Accuracy: 0.07
+Epoch 14/50, Loss: 0.06794572, Win Rate: 0.12, Accuracy: 0.06
+Epoch 15/50, Loss: 0.06621016, Win Rate: 0.12, Accuracy: 0.05
+Epoch 16/50, Loss: 0.06479150, Win Rate: 0.12, Accuracy: 0.05
+Epoch 17/50, Loss: 0.06252731, Win Rate: 0.12, Accuracy: 0.05
+Epoch 18/50, Loss: 0.06043140, Win Rate: 0.12, Accuracy: 0.05
+Epoch 19/50, Loss: 0.05884058, Win Rate: 0.12, Accuracy: 0.05
+Epoch 20/50, Loss: 0.05678171, Win Rate: 0.12, Accuracy: 0.05
+Epoch 21/50, Loss: 0.05536658, Win Rate: 0.12, Accuracy: 0.06
+Epoch 22/50, Loss: 0.05407283, Win Rate: 0.12, Accuracy: 0.06
+Epoch 23/50, Loss: 0.05257698, Win Rate: 0.12, Accuracy: 0.06
+Epoch 24/50, Loss: 0.05146295, Win Rate: 0.12, Accuracy: 0.06
+Epoch 25/50, Loss: 0.05072530, Win Rate: 0.12, Accuracy: 0.06
+Epoch 26/50, Loss: 0.04956131, Win Rate: 0.12, Accuracy: 0.06
+Epoch 27/50, Loss: 0.04883173, Win Rate: 0.12, Accuracy: 0.06
+Epoch 28/50, Loss: 0.04805284, Win Rate: 0.12, Accuracy: 0.06
+Epoch 29/50, Loss: 0.04738580, Win Rate: 0.12, Accuracy: 0.06
+Epoch 30/50, Loss: 0.04722564, Win Rate: 0.12, Accuracy: 0.06
+Epoch 31/50, Loss: 0.04678140, Win Rate: 0.12, Accuracy: 0.06
+Epoch 32/50, Loss: 0.04651652, Win Rate: 0.12, Accuracy: 0.06
+Epoch 33/50, Loss: 0.04636537, Win Rate: 0.12, Accuracy: 0.06
+Epoch 34/50, Loss: 0.04615614, Win Rate: 0.12, Accuracy: 0.06
+Epoch 35/50, Loss: 0.04615715, Win Rate: 0.12, Accuracy: 0.06
+Epoch 36/50, Loss: 0.04630503, Win Rate: 0.12, Accuracy: 0.07
+Epoch 37/50, Loss: 0.04613446, Win Rate: 0.12, Accuracy: 0.06
+Epoch 38/50, Loss: 0.04559293, Win Rate: 0.12, Accuracy: 0.06
+Epoch 39/50, Loss: 0.04529016, Win Rate: 0.12, Accuracy: 0.06
+Epoch 40/50, Loss: 0.04554318, Win Rate: 0.12, Accuracy: 0.06
+Epoch 41/50, Loss: 0.04552213, Win Rate: 0.12, Accuracy: 0.06
+Epoch 42/50, Loss: 0.04520318, Win Rate: 0.12, Accuracy: 0.06
+Epoch 43/50, Loss: 0.04524279, Win Rate: 0.12, Accuracy: 0.06
+Epoch 44/50, Loss: 0.04538398, Win Rate: 0.12, Accuracy: 0.06
+Epoch 45/50, Loss: 0.04511621, Win Rate: 0.12, Accuracy: 0.06
+Epoch 46/50, Loss: 0.04503316, Win Rate: 0.12, Accuracy: 0.06
+Epoch 47/50, Loss: 0.04521151, Win Rate: 0.12, Accuracy: 0.06
+Epoch 48/50, Loss: 0.04499948, Win Rate: 0.12, Accuracy: 0.06
+Epoch 49/50, Loss: 0.04494855, Win Rate: 0.12, Accuracy: 0.06
+Epoch 50/50, Loss: 0.04504374, Win Rate: 0.12, Accuracy: 0.06
+✅ Best model saved to checkpoints/best_model.pth
+Model saved to sos_weights.pth.
