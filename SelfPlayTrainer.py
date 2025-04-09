@@ -1,3 +1,5 @@
+import re
+
 import torch
 import os
 import numpy as np
@@ -94,14 +96,28 @@ class Trainer:
         print(f"Saved best model weights to {checkpoint_path}")
 
     def load_best_weights(self):
-        """מטעין את המשקלים הכי טובים שהיו במהלך האימון."""
-        checkpoint_files = [f for f in os.listdir(self.checkpoint_dir) if f.endswith('.pth')]
-        if checkpoint_files:
-            checkpoint_files.sort(key=lambda x: int(x.split('_')[-1].split('.')[0]))  # מיון לפי אפוקות
-            latest_checkpoint = checkpoint_files[-1]
-            checkpoint_path = os.path.join(self.checkpoint_dir, latest_checkpoint)
-            self.network.load_state_dict(torch.load(checkpoint_path))
-            print(f"Loaded best model weights from {checkpoint_path}")
+        # ננסה קודם לטעון את הקובץ הראשי אם קיים
+        best_model_path = os.path.join(self.checkpoint_dir, 'best_model.pth')
+        if os.path.exists(best_model_path):
+            print(f"Loading model from: {best_model_path}")
+            self.network.load_state_dict(torch.load(best_model_path))
+            return
+
+        # חיפוש כל קבצי epoch
+        checkpoint_files = [
+            f for f in os.listdir(self.checkpoint_dir)
+            if re.match(r'^best_model_epoch_\d+\.pth$', f)
+        ]
+
+        if not checkpoint_files:
+            raise FileNotFoundError("No suitable model checkpoint found.")
+
+        # מיון לפי מספר האפוק
+        checkpoint_files.sort(key=lambda x: int(re.search(r'\d+', x).group()), reverse=True)
+        latest_checkpoint = checkpoint_files[0]
+
+        print(f"Loading model from: {latest_checkpoint}")
+        self.network.load_state_dict(torch.load(os.path.join(self.checkpoint_dir, latest_checkpoint)))
 
     def train(self, data_buffer):
         """

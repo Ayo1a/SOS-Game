@@ -150,6 +150,17 @@ class SOSGame:
         for i, row in enumerate(self.board):
             print(i, " ".join(row))
 
+    def get_winner(self):
+        if self.game_over:
+            if self.scores[PLAYER_1] > self.scores[PLAYER_2]:
+                return PLAYER_1
+            elif self.scores[PLAYER_1] < self.scores[PLAYER_2]:
+                return PLAYER_2
+            else:
+                return 0
+        else:
+            return 0
+
     @staticmethod
     def is_valid(x: int, y: int) -> bool:
         """Checks if the given coordinates are within the board's boundaries."""
