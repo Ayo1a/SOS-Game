@@ -62,10 +62,10 @@ class SelfPlayTrainer:
         if total_visits == 0:
             legal_moves = root.game.legal_moves()
             if not legal_moves:
-                print("Warning: No legal moves available in root state!")
-                print("Board:")
-                print(root.game.board)
-                print("Current player:", root.game.current_player)
+                #print("Warning: No legal moves available in root state!")
+                #print("Board:")
+                #print(root.game.board)
+                #print("Current player:", root.game.current_player)
                 return {}  # or return None, or handle this gracefully in your code
             uniform_prob = 1 / len(legal_moves)
             return {move: uniform_prob for move in legal_moves}
@@ -186,8 +186,7 @@ class Trainer:
             accuracy = total_accuracy / total_games if total_games > 0 else 0.0
 
             # הדפסת התקדמות
-            print(
-                f"Epoch {epoch + 1}/{self.epochs}, Loss: {loss.item():.8f}, Win Rate: {win_rate:.2f}, Accuracy: {accuracy:.2f}")
+            print(f"Epoch {epoch + 1}/{self.epochs}, Loss: {loss.item():.8f}, Win Rate: {win_rate:.2f}, Accuracy: {accuracy:.2f}")
 
             # אם הדיוק הנוכחי הוא הגבוה ביותר – נשמור את המודל
             if accuracy > best_accuracy:

@@ -76,7 +76,7 @@ def pre_train_network(num_games=10000, model_path="sos_weights.pth"):
     self_play_trainer.generate_training_data()
 
     # אימון הרשת
-    trainer = Trainer(network, epochs=50)
+    trainer = Trainer(network, epochs=10)
     trainer.train(self_play_trainer.data_buffer)
 
     # שמירת המשקלים
@@ -101,7 +101,7 @@ def train_puct_agent(num_games=10000, epochs=50, model_path="sos_weights.pth"):
 
     # יצירת נתוני אימון דרך משחק עצמי
     self_play_trainer = SelfPlayTrainer(player, num_games=num_games)
-    self_play_trainer.generate_training_data()
+    #self_play_trainer.generate_training_data()
 
     # אימון הרשת
     trainer = Trainer(network, epochs=epochs)
@@ -124,7 +124,8 @@ def evaluate_agent(agent1, agent2, num_games=100):
     elo_A = 1500  # דירוג התחלתי
     elo_B = 1500
 
-    for _ in range(num_games):
+    for i in range(num_games):
+        print(f"play number {i}")
         game = SOSGame()
         while not game.game_over:
             move1 = agent1.play(game)
@@ -135,6 +136,7 @@ def evaluate_agent(agent1, agent2, num_games=100):
             game.make_move(*move2)
 
         winner = game.get_winner()
+        print(f"The winner is: {winner}")
         if winner == 1:
             elo_A = update_elo(elo_A, elo_B, 1)
             elo_B = update_elo(elo_B, elo_A, 0)
@@ -149,10 +151,10 @@ def evaluate_agent(agent1, agent2, num_games=100):
 
 def train_network(num_games=1000, epochs=50, model_path="sos_weights.pth"):
     # אימון ראשוני של הרשת
-    pre_train_network(num_games=num_games, model_path=model_path)
+    #pre_train_network(num_games=num_games, model_path=model_path)
 
     # אימון של שחקן PUCT
-    train_puct_agent(num_games=num_games, epochs=epochs, model_path=model_path)
+    #train_puct_agent(num_games=num_games, epochs=epochs, model_path=model_path)
 
     # הערכת ביצועים בין גרסאות של השחקן
     agent1 = PUCTPlayer(c_puct=10, network=GameNetwork())
@@ -161,5 +163,5 @@ def train_network(num_games=1000, epochs=50, model_path="sos_weights.pth"):
 
 
 if __name__ == "__main__":
-    train_network(num_games=1000, epochs=10, model_path="sos_weights.pth")
+    train_network(num_games=100, epochs=3, model_path="sos_weights.pth")
     #play_game()
